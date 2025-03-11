@@ -1,41 +1,26 @@
 import React from "react";
-import { TouchableOpacity, ImageBackground,StyleSheet, Text,View } from "react-native";
+import { TouchableOpacity, ImageBackground,StyleSheet, Text, View, Dimensions } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+import { saveData, loadData } from "@/src/services/dataStorage";
+
+const { width, height } = Dimensions.get('window');
+interface ImageButtonProps {
+    onImageSelect: (imageUri: string) => void;
+}
 
 interface DadosScreenState {
     imageUri: string | null;
 }
 
-class ImagemButton extends React.Component<{}, DadosScreenState> {
-    private folderPath: string = FileSystem.documentDirectory + 'userData/';
-
-    constructor(props: {}) {
+class ImagemButton extends React.Component<ImageButtonProps, DadosScreenState> {
+    constructor(props: ImageButtonProps) {
         super(props);
         this.state = {
             imageUri: null,
         };
     }
 
-    createFolder = async () => {
-        const folderInfo = await FileSystem.getInfoAsync(this.folderPath);
-        if(!folderInfo.exists) {
-            await FileSystem.makeDirectoryAsync(this.folderPath, { intermediates: true });
-        }
-    };
-
-    saveImageUri = async (uri: string) => {
-        const filePath = this.folderPath + 'userData.json';
-        const data = {
-            imageUri: uri,
-        };
-
-        await FileSystem.writeAsStringAsync(filePath, JSON.stringify(data), {
-            encoding: FileSystem.EncodingType.UTF8,
-        });
-    };
-
-    pickIMage = async () => {
+    pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
         if(permissionResult.granted) {
@@ -47,28 +32,21 @@ class ImagemButton extends React.Component<{}, DadosScreenState> {
 
             if(!result.canceled) {
                 const uri = result.assets[0].uri;
-                await this.createFolder();
-                await this.saveImageUri(uri);
-                this.setState({ imageUri: uri });
-            } 
+                this.setState({ imageUri: uri }, () => {
+                    this.props.onImageSelect(uri);
+                });
+            }
         }else{
             alert('Você precisa permitir acesso à galeria!');
         }
     };
 
     loadImage = async () => {
-        const filePath = this.folderPath + 'useData.json';
-
-        try {
-            const fileData = await FileSystem.readAsStringAsync(filePath, {
-                encoding: FileSystem.EncodingType.UTF8,
-            });
-            const parsedData = JSON.parse(fileData);
-            this.setState({ imageUri: parsedData })
-        } catch (error) {
-            console.error('Erro ao carregar imagem: ', error);
+        const data = await loadData();
+        if (data) {
+            this.setState({ imageUri: data.imageUri || null });
         }
-    };
+    }
 
     componentDidMount() {
         this.loadImage();
@@ -78,14 +56,18 @@ class ImagemButton extends React.Component<{}, DadosScreenState> {
         return (
             <TouchableOpacity
                 style={styles.imageButton}
-                onPress={this.pickIMage}
+                onPress={this.pickImage}
             >
                 <ImageBackground
                     source={this.state.imageUri ? { uri: this.state.imageUri }: undefined}
                     style={styles.imageBackground}
                     imageStyle={{ borderRadius: 30 }}
                 >
-                    {!this.state.imageUri && <Text>Enviar Foto</Text>}
+                    {!this.state.imageUri && (
+                        <View style={styles.textContainer}>
+                            <Text style={styles.text}>Enviar Foto</Text>
+                        </View>
+                    )}
                 </ImageBackground>
             </TouchableOpacity>
         );
@@ -93,17 +75,30 @@ class ImagemButton extends React.Component<{}, DadosScreenState> {
 }
 
 const styles = StyleSheet.create({
+    textContainer: {
+        
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [{ translateX: -45}, {translateY: -10}],
+    },
+    text: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: 'Error',
+        textAlign: 'center',
+    },
     imageButton: {
         backgroundColor: 'transparent',
-        borderColor: '#9B4D96',
+        borderColor: '#fff',
         borderWidth: 1,
         borderRadius: 30,
         alignItems: 'center',
         marginVertical: 10,
-        width: 140,
-        height: 180,
+        width: width * 0.33,
+        height: height * 0.22,
         position: 'absolute',
-        top: '1%',
+        top: '6%',
         left: '6%',
         overflow: 'hidden',
     },

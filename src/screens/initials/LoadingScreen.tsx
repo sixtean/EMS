@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { useCustomFonts } from '../../hooks/useCustomFonts';
-import ContainerButton from '../../components/ContainerButton';
+import ContainerButton from '../../components/loadingButton/ContainerButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import Lottieview from 'lottie-react-native';
 import { useNavigation} from '@react-navigation/native';
@@ -16,6 +16,8 @@ const LoadingScreen: React.FC = () => {
     const fontsLoaded = useCustomFonts();
     const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'Loading'>>();
 
+    const { width, height } = Dimensions.get('window');
+    
     if(fontsLoaded) {
          return (
             <LinearGradient
@@ -26,10 +28,10 @@ const LoadingScreen: React.FC = () => {
                 style={styles.container}
             >
 
-                <Text style={styles.titulo}>
+                <Text style={[styles.titulo, { fontSize: width * 0.09, bottom: height * 0.8, right: width * 0.4}]}>
                     Bem vindo ao
                 </Text>
-                <Text style={styles.ems}>
+                <Text style={[styles.ems, { fontSize: width * 0.09, bottom: height * 0.31, left: width * 0.21}]}>
                     EMS
                 </Text>
                 
@@ -37,14 +39,14 @@ const LoadingScreen: React.FC = () => {
                     source={require('../../animations/initial/intial.json')}
                     autoPlay
                     loop
-                    style={styles.lottieAnimation}
+                    style={[styles.lottieAnimation, { width: width * 0.5, height: height * 0.5}]}
                 />
 
                 <View style={styles.init}>
 
                    
 
-                    <Text style={styles.textInclude}>
+                    <Text style={[styles.textInclude, { fontSize: width * 0.03, bottom: height * 0.09 }]}>
                         E ai! Sabia que agora tem um app pra te dar um help nos estudos musicais da CCB ?
                     </Text>
 
@@ -74,7 +76,8 @@ const LoadingScreen: React.FC = () => {
                 </View>
             </LinearGradient>
         );
-    }   
+    } 
+    return null;
 };
 
 const styles = StyleSheet.create({
@@ -87,16 +90,13 @@ const styles = StyleSheet.create({
     titulo: {
         fontFamily: 'Titulo',
         fontSize: 37,
-        bottom: '30%',
-        right: '14%',
+        position: 'absolute',
     },
     ems: {
         position: 'relative',
         fontSize: 37,
         fontFamily: 'Titulo',
         color: '#DAA520',
-        bottom: '36%',
-        left: '26%',
         zIndex: 1,
     },
     init: {
@@ -123,8 +123,6 @@ const styles = StyleSheet.create({
     },
     lottieAnimation: {
         position: 'absolute',
-        width: '50%',
-        height: '50%',
     }
 
 });
